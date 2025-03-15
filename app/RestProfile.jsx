@@ -24,7 +24,7 @@ import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import PropTypes from 'prop-types';
 import * as yup from 'yup';
 import { useNavigation } from 'expo-router';
-import { firestore } from '../app/firebaseConfig'; // Import the initialized Firestore instance
+import { firestore } from '../app/firebaseConfig';
 
 const { brand, darkLight, primary } = Colors;
 
@@ -91,11 +91,10 @@ const RestProfile = ({ navigation }) => {
             capacity: values.no_of_guest,
             timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
             address: `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`,
-            ownerId: user.uid, // Add the owner's UID
+            ownerId: user.uid, 
         };
 
         try {
-            // Add the new restaurant to Firestore
             await addDoc(collection(firestore, 'restaurants'), newRestaurant);
             setSubmitting(false);
 
