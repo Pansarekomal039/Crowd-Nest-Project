@@ -13,7 +13,7 @@ const Splash = ({ navigation }) => {
     setTimeout( async () =>  {
       await SplashScreen.hideAsync();
       navigation.replace("Welcome");
-    }, 3000);
+    }, 2000);
   };
   hideSplash();
   }, []);

@@ -63,7 +63,7 @@ const Reserve = ({ navigation }) => {
             <StyledContainer>
                 <StatusBar style="dark" />
                 <InnerContainer>
-                    <PageLogo resizeMode="cover" source={require("../assets/images/Log_in.jpg")} />
+                    <PageLogo resizeMode="cover" source={require("../assets/images/Waiters-amico.png")} />
                     <Line />
                     <SubTitle>Reservation</SubTitle>
 
@@ -86,7 +86,16 @@ const Reserve = ({ navigation }) => {
                                 handleMessage('Please fill all fields');
                                 setSubmitting(false);
                             } else {
-                                Alert.alert("Reservation Confirmed", `Your reservation for ${values.no_of_guest} guests on ${values.date} at ${values.time} is confirmed!`);
+                                Alert.alert(
+                                    "Reservation Confirmed",
+                                    `Your reservation for ${values.no_of_guest} guests on ${values.date} at ${values.time} is confirmed!`,
+                                    [
+                                        {
+                                            text: "OK",
+                                            onPress: () => navigation.navigate('DrawerNav'), 
+                                        },
+                                    ]
+                                );
                                 setSubmitting(false);
                             }
                         }}

@@ -12,6 +12,7 @@ import O_signup from "../app/O_signup";
 import RestProfile from "../app/RestProfile";
 import RestList from "../app/RestList";
 import DrawerNav from "../app/Location";
+import Reserve from "../app/Reservation";
 const Stack = createStackNavigator();
  
 const RootStack = () => {
@@ -35,6 +36,7 @@ const RootStack = () => {
       <Stack.Screen name="O_signup" component={O_signup} options={{ headerShown: false }} />
       <Stack.Screen name="RestProfile" component={RestProfile} options={{ headerShown: false }} />
       <Stack.Screen name="RestList" component={RestList} />
+      <Stack.Screen name="Reserve" component={Reserve} />
     </Stack.Navigator>
   );
 };

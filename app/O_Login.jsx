@@ -62,7 +62,7 @@ const O_Login = ({ navigation }) => {
             signInWithCredential(auth, credential)
                 .then(() => {
                     Alert.alert('Success', 'Google sign-in successful!');
-                    navigation.replace('Queue');
+                    navigation.replace('RestProfile');
                 })
                 .catch((error) => {
                     handleMessage(error.message);

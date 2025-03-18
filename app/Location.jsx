@@ -12,27 +12,36 @@ import {
   Image,
   TouchableOpacity
 } from "react-native";
-import FlatLI from '../components/FlatLI';
+import {
+  Line,
+  Colors,
+} from '../components/style';
+const { brand, darkLight, primary } = Colors;
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { getFirestore, collection,query, onSnapshot } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import * as Location from "expo-location";
+import { DrawerItemList, DrawerContentScrollView } from "@react-navigation/drawer";
 import RestList from '../app/RestList'; 
-import { firestore } from '../app/firebaseConfig';
 import O_Login from '../app/O_Login'; 
-import { ScrollView } from "react-native-gesture-handler";
-// Bottom Tab Navigator
 const Tab = createBottomTabNavigator();
 
 // Drawer Navigator
 const Drawer = createDrawerNavigator();
 
-const MainScreen = ({ navigation }) => (
-  <O_Login navigation={navigation} />
-);
+
+const CustomDrawerContent = (props) => {
+  return (
+    <DrawerContentScrollView {...props}>
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
+};
+// const MainScreen = ({ navigation }) => (
+//   <O_Login navigation={navigation} />
+// );
 // Placeholder components for the 4 screens
 const HomeScreen = () => (
   <View style={styles.screenContainer}>
@@ -126,23 +135,50 @@ const RestaurantSearch = ({ navigation }) => {
   // Dummy data for horizontal images (same as in FlatLI)
   const images = [
     {
-      id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
+      id: '1',
+      image: require('../assets/images/Punjab.jpg'),
+      cuisine:"Punjabi",
+    },
+    {
+      id: '2',
+      image: require('../assets/images/Maharashtra.jpg'),
+      cuisine:"Maharashtrian",
+    },
+    {
+      id: '3',
       image: require('../assets/images/1.jpg'),
+      cuisine:"South Indian",
     },
     {
-      id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
+      id: '4',
       image: require('../assets/images/2.jpg'),
+      cuisine:"East Indian",
     },
     {
-      id: '58694a0f-3da1-471f-bd96-145571e29d72',
-      image: require('../assets/images/3.jpg'),
+      id: '5',
+      image: require('../assets/images/2.jpg'),
+      cuisine:"Chinese",
     },
+    {
+      id: '6',
+      image: require('../assets/images/3.jpg'),
+      cuisine:"Rajasthani",
+    },
+    {
+      id: '7',
+      image: require('../assets/images/Gujarati.jpg'),
+      cuisine:"Gujrati",
+    },
+
   ];
 
-  // Render function for the horizontal FlatList
   const renderImageItem = ({ item }) => (
-    <TouchableOpacity style={styles.imageItem}>
+    <TouchableOpacity
+      style={styles.imageItem}
+      onPress={() => navigation.navigate("Cuisine", { cuisine: item.cuisine,Auth ,firestore})}
+    >
       <Image source={item.image} style={styles.horizontalImage} resizeMode="cover" />
+      <Text style={styles.cuisineText}>{item.cuisine}</Text>
     </TouchableOpacity>
   );
 
@@ -162,7 +198,6 @@ const RestaurantSearch = ({ navigation }) => {
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-            {/* Horizontal FlatList for Images */}
             <FlatList
               data={images}
               renderItem={renderImageItem}
@@ -181,7 +216,7 @@ const RestaurantSearch = ({ navigation }) => {
             <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
             <TouchableOpacity
               style={styles.seeMoreButton}
-              onPress={() => navigation.navigate("Reservation", { restaurants: item })}
+              onPress={() => navigation.navigate("Reserve", { restaurants: item })}
             >
               <Text style={styles.seeMoreButtonText}>See More</Text>
             </TouchableOpacity>
@@ -204,6 +239,48 @@ const RestaurantSearch = ({ navigation }) => {
   );
 };
 
+
+const Cuisine = ({ route, navigation }) => {
+  const { cuisine,Auth,firestore } = route.params; 
+  const [restaurants, setRestaurants] = useState([]);
+
+  useEffect(() => {
+    if (!Auth.currentUser) return;
+    const q = query(collection(firestore, "restaurants"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const restaurantList = [];
+      querySnapshot.forEach((doc) => {
+        restaurantList.push({ id: doc.id, ...doc.data() });
+      });
+      // Filter restaurants by cuisine
+      const filteredRestaurants = restaurantList.filter(
+        (restaurant) => restaurant.cuisine === cuisine
+      );
+      setRestaurants(filteredRestaurants);
+    });
+    return () => unsubscribe();
+  }, [cuisine]);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.cuisineHeader}>{cuisine} Restaurants</Text>
+      <FlatList
+        data={restaurants}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.restaurantItem}>
+            <Text style={styles.restaurantName}>{item.name}</Text>
+            <Text style={styles.restaurantDetails}>Cuisine: {item.cuisine}</Text>
+            <Text style={styles.restaurantDetails}>Timing: {item.timing}</Text>
+            <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
+          </View>
+        
+        )}
+      />
+    </View>
+  );
+};
+
 // Bottom Tab Navigator with 4 screens
 const BottomTabNavigator = () => {
   return (
@@ -215,15 +292,17 @@ const BottomTabNavigator = () => {
           if (route.name === "Home") {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "Reservations") {
-            iconName = focused ? "document" : "document-outline"; // Correct icon name
+            iconName = focused ? "document" : "document-outline";
           } else if (route.name === "Notifications") {
-            iconName = focused ? "notifications" : "notifications-outline"; // Correct icon name
+            iconName = focused ? "notifications" : "notifications-outline"; 
           } else if (route.name === "Owner Profile") {
             iconName = focused ? "person" : "person-outline";
+          } else if (route.name === "Cuisine") {
+            iconName = focused ? "restaurant" : "restaurant-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "blue",
+        tabBarActiveTintColor: "#6D28D9",
         tabBarInactiveTintColor: "gray",
       })}
     >
@@ -239,6 +318,9 @@ const BottomTabNavigator = () => {
       <Tab.Screen name="Owner Profile" 
       component={O_Login}
       options={{headerShown: false}} />
+      <Tab.Screen name="Cuisine"
+       component={Cuisine} 
+      options={{ headerShown: false }} />
     </Tab.Navigator>
   );
 };
@@ -246,7 +328,18 @@ const BottomTabNavigator = () => {
 // Drawer Navigator with Bottom Tab Navigator as the main screen
 const DrawerNav = () => {
   return (
-      <Drawer.Navigator initialRouteName="Crowd-nest">
+    <Drawer.Navigator
+    initialRouteName="Crowd-nest"
+    drawerContent={(props) => <CustomDrawerContent {...props} />}
+    screenOptions={{
+    drawerActiveTintColor: "#6D28D9", // Active item text color
+    drawerInactiveTintColor: "#333", // Inactive item text color
+    drawerActiveBackgroundColor: "#EDE9FE", // Active item background color
+    drawerInactiveBackgroundColor: "#FFF", // Inactive item background color
+    drawerItemStyle: styles.drawerItem, // Custom style for drawer items
+    drawerLabelStyle: styles.drawerLabel, // Custom style for drawer labels
+  }}
+>        
         <Drawer.Screen name="Crowd-nest" component={BottomTabNavigator} />
         <Drawer.Screen name="About" component={AboutScreen} />
         <Drawer.Screen name="Contact" component={ContactScreen} />
@@ -268,6 +361,12 @@ const ContactScreen = () => (
 );
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -288,6 +387,7 @@ const styles = StyleSheet.create({
   },
   horizontalList: {
     paddingVertical: 10,
+    marginBottom:20,
   },
   imageItem: {
     height: 150,
@@ -330,7 +430,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   seeMoreButton: {
-    backgroundColor: "blue",
+    backgroundColor: "#6D28D9",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
@@ -338,7 +438,26 @@ const styles = StyleSheet.create({
   },
   seeMoreButtonText: {
     color: "white",
+    // fontWeight: "bold",
+   
+  },
+  // drawerHeader: {
+  //   padding: 20,
+  //   backgroundColor: "#6D28D9", // Header background color
+  // },
+  drawerHeaderText: {
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#FFF", // Header text color
+  },
+  drawerItem: {
+    borderRadius: 8, 
+    marginHorizontal: 10,
+    marginVertical: 5,
+  },
+  drawerLabel: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
 export default DrawerNav;
