@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
 import { collection, addDoc } from 'firebase/firestore'; 
@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 import { Octicons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import RNPickerSelect from 'react-native-picker-select';
+import * as ImagePicker from 'expo-image-picker';
 import {
     StyledContainer,
     InnerContainer,
@@ -18,14 +19,15 @@ import {
     ButtonText,
     Line,
     PageTitle,
+    Image
 } from '../components/style';
 import { View, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Text } from 'react-native';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import PropTypes from 'prop-types';
 import * as yup from 'yup';
 import { useNavigation } from 'expo-router';
-import { firestore } from '../app/firebaseConfig';
-
+import { firestore, storage } from '../app/firebaseConfig';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const { brand, darkLight, primary } = Colors;
 
 const formatTime = (date) => {
@@ -83,7 +85,36 @@ const RestProfile = ({ navigation }) => {
         pinCode: '',
     });
 
+const[image, setImage] = useState(false);
+const[uploading,setUploading] = useState(false);
+const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+    });
+
+    if (!result.canceled) {
+        setImage(result.assets[0].uri); 
+    }
+};
+
+const uploadImage = async (uri) => {
+    setUploading(true);
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const storageRef = ref(storage, `restaurant-images/${Date.now()}`); // Unique filename
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
+    setUploading(false);
+    return downloadURL;
+};
     const handleSubmit = async (values, { setSubmitting }) => {
+        let imageUrl = '';
+        if (image) {
+            imageUrl = await uploadImage(image); // Upload image and get URL
+        }
         const newRestaurant = {
             id: Date.now().toString(),
             name: values.fullName,
@@ -92,6 +123,7 @@ const RestProfile = ({ navigation }) => {
             timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
             address: `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`,
             ownerId: user.uid, 
+            image: imageUrl, 
         };
 
         try {
@@ -181,6 +213,18 @@ const RestProfile = ({ navigation }) => {
                                     {errors.cuisine && touched.cuisine && (
                                         <Text style={styles.errorText}>{errors.cuisine}</Text>
                                     )}
+                                </View>
+                                <View style={{ marginBottom: 15 }}>
+                                    <StyledInputLabel>Restaurant Image</StyledInputLabel>
+                                    <TouchableOpacity onPress={pickImage}>
+                                        <View style={styles.imagePicker}>
+                                            {image ? (
+                                                <Image source={{ uri: image }} style={styles.image} />
+                                            ) : (
+                                                <Text style={styles.imagePlaceholder}>Tap to select an image</Text>
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
                                 </View>
 
                                 {/* Time Pickers */}
@@ -336,7 +380,24 @@ const styles = StyleSheet.create({
     inputError: {
         borderColor: 'red',
         borderWidth: 1
-    }
+    },
+    imagePicker: {
+        borderWidth: 1,
+        borderColor: darkLight,
+        borderRadius: 4,
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 100,
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 4,
+    },
+    imagePlaceholder: {
+        color: darkLight,
+    },
 });
 
 RestProfile.propTypes = {
