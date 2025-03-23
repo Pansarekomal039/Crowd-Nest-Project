@@ -42,6 +42,7 @@
     "expo-dev-client": "~5.0.12",
     "expo-font": "~13.0.2",
     "expo-haptics": "~14.0.0",
+    "expo-image-picker": "~16.0.6",
     "expo-linking": "~7.0.5",
     "expo-location": "~18.0.7",
     "expo-router": "^4.0.17",
@@ -53,6 +54,7 @@
     "expo-web-browser": "~14.0.1",
     "firebase": "^11.3.1",
     "formik": "^2.4.6",
+    "geolib": "^3.3.4",
     "glob": "^11.0.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
@@ -77,8 +79,7 @@
     "rimraf": "^6.0.1",
     "semver": "^7.6.3",
     "styled-components": "^6.1.14",
-    "yup": "^1.6.1",
-    "expo-image-picker": "~16.0.6"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -78,6 +78,7 @@ const RestProfile = ({ navigation }) => {
     const user = auth.currentUser;
     const [isPickerVisible, setPickerVisibility] = useState(false);
     const [currentPickerType, setCurrentPickerType] = useState('open');
+    const [uploading,setUploading]= useState(false);
     const [address, setAddress] = useState({
         street: '',
         city: '',
@@ -85,36 +86,78 @@ const RestProfile = ({ navigation }) => {
         pinCode: '',
     });
 
-const[image, setImage] = useState(false);
-const[uploading,setUploading] = useState(false);
-const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-    });
+    const [image, setImage] = useState(null);
 
-    if (!result.canceled) {
-        setImage(result.assets[0].uri); 
+    if (!user) {
+        Alert.alert("Error", "You must be logged in to perform this action.");
+        return;
     }
-};
+    useEffect(() => {
+        (async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to upload images.');
+            }
+        })();
+    }, []);
 
-const uploadImage = async (uri) => {
-    setUploading(true);
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    const storageRef = ref(storage, `restaurant-images/${Date.now()}`); // Unique filename
-    await uploadBytes(storageRef, blob);
-    const downloadURL = await getDownloadURL(storageRef);
-    setUploading(false);
-    return downloadURL;
-};
+    const pickImage = async () => {
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: 'Images', // Use 'Images' instead of ['images']
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+            });
+
+            console.log("Image Picker Result: ", result);
+
+            if (!result.canceled) {
+                setImage(result.assets[0].uri); // Update the image state
+            } else {
+                console.log("Image picker canceled");
+            }
+        } catch (error) {
+            console.error("Error picking image: ", error);
+            Alert.alert("Error", "Failed to pick image. Please try again.");
+        }
+    };
+
+    const uploadImage = async (uri) => {
+        setUploading(true);
+        try {
+            console.log("Fetching image from URI: ", uri);
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            console.log("Blob created: ", blob);
+
+            const storageRef = ref(storage, `restaurant-images/${Date.now()}`);
+            console.log("Uploading image to Firebase Storage...");
+            await uploadBytes(storageRef, blob);
+            console.log("Image uploaded successfully.");
+
+            const downloadURL = await getDownloadURL(storageRef);
+            console.log("Download URL: ", downloadURL);
+            setUploading(false);
+            return downloadURL;
+        } catch (error) {
+            console.error("Error uploading image: ", error);
+            setUploading(false);
+            Alert.alert("Error", "Failed to upload image. Please try again.");
+            return null;
+        }
+    };
+
     const handleSubmit = async (values, { setSubmitting }) => {
         let imageUrl = '';
         if (image) {
-            imageUrl = await uploadImage(image); // Upload image and get URL
+            imageUrl = await uploadImage(image);
+            if (!imageUrl) {
+                setSubmitting(false);
+                return;
+            }
         }
+
         const newRestaurant = {
             id: Date.now().toString(),
             name: values.fullName,
@@ -122,8 +165,8 @@ const uploadImage = async (uri) => {
             capacity: values.no_of_guest,
             timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
             address: `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`,
-            ownerId: user.uid, 
-            image: imageUrl, 
+            ownerId: user.uid,
+            image: imageUrl,
         };
 
         try {
@@ -214,6 +257,8 @@ const uploadImage = async (uri) => {
                                         <Text style={styles.errorText}>{errors.cuisine}</Text>
                                     )}
                                 </View>
+
+                                {/* Image Picker and Add Button */}
                                 <View style={{ marginBottom: 15 }}>
                                     <StyledInputLabel>Restaurant Image</StyledInputLabel>
                                     <TouchableOpacity onPress={pickImage}>
@@ -225,7 +270,15 @@ const uploadImage = async (uri) => {
                                             )}
                                         </View>
                                     </TouchableOpacity>
+
+                                    {/* Add Button */}
+                                    {image && (
+                                        <StyledButton onPress={handleSubmit} style={{ marginTop: 10 }}>
+                                            <ButtonText>Add</ButtonText>
+                                        </StyledButton>
+                                    )}
                                 </View>
+
 
                                 {/* Time Pickers */}
                                 <MyTextInput
@@ -357,6 +410,8 @@ const MyTextInput = ({ label, icon, error, onPress, ...props }) => (
         {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
 ); 
+export { MyTextInput };
+
 
 const styles = StyleSheet.create({
     errorText: {

@@ -96,11 +96,14 @@ const RestaurantSearch = ({ navigation }) => {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await Location.getCurrentPositionAsync({ 
+        accuracy:Location.Accuracy.High,
+      });
       const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
       if (reverseGeocode.length > 0) {
-        const { city, region, country } = reverseGeocode[0];
-        setAddress(`${city}, ${region}, ${country}`);
+        const { city, region, country,street, name, postalCode } = reverseGeocode[0];
+        const detailedAddress = `${street || name}, ${city}, ${region}, ${postalCode}, ${country}`;
+        setAddress(detailedAddress)
       }
 
       setLoading(false);
@@ -136,7 +139,7 @@ const RestaurantSearch = ({ navigation }) => {
   const images = [
     {
       id: '1',
-      image: require('../assets/images/Punjab.jpg'),
+      image: require('../assets/images/home meal.jpg'),
       cuisine:"Punjabi",
     },
     {
@@ -146,22 +149,22 @@ const RestaurantSearch = ({ navigation }) => {
     },
     {
       id: '3',
-      image: require('../assets/images/1.jpg'),
+      image: require('../assets/images/SouthIndian.jpg'),
       cuisine:"South Indian",
     },
     {
       id: '4',
-      image: require('../assets/images/2.jpg'),
+      image: require('../assets/images/EastIndian.jpg'),
       cuisine:"East Indian",
     },
     {
       id: '5',
-      image: require('../assets/images/2.jpg'),
+      image: require('../assets/images/Chinese.jpg'),
       cuisine:"Chinese",
     },
     {
       id: '6',
-      image: require('../assets/images/3.jpg'),
+      image: require('../assets/images/Rajsthani.jpg'),
       cuisine:"Rajasthani",
     },
     {
@@ -216,7 +219,7 @@ const RestaurantSearch = ({ navigation }) => {
             <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
             <TouchableOpacity
               style={styles.seeMoreButton}
-              onPress={() => navigation.navigate("Reserve", { restaurants: item })}
+              onPress={() => navigation.navigate("RestaurantDetails", { restaurants: item })}
             >
               <Text style={styles.seeMoreButtonText}>See More</Text>
             </TouchableOpacity>

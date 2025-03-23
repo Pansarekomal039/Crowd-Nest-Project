@@ -12,6 +12,7 @@ import O_signup from "../app/O_signup";
 import RestProfile from "../app/RestProfile";
 import RestList from "../app/RestList";
 import DrawerNav from "../app/Location";
+import RestaurantDetails from "../app/crowd";
 import Reserve from "../app/Reservation";
 const Stack = createStackNavigator();
  
@@ -37,6 +38,7 @@ const RootStack = () => {
       <Stack.Screen name="RestProfile" component={RestProfile} options={{ headerShown: false }} />
       <Stack.Screen name="RestList" component={RestList} />
       <Stack.Screen name="Reserve" component={Reserve} />
+      <Stack.Screen name="RestaurantDetails" component={RestaurantDetails} />
     </Stack.Navigator>
   );
 };
