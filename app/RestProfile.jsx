@@ -7,6 +7,7 @@ import { Octicons } from '@expo/vector-icons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import RNPickerSelect from 'react-native-picker-select';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system'
 import {
     StyledContainer,
     InnerContainer,
@@ -76,6 +77,7 @@ const restProfileSchema = yup.object().shape({
 const RestProfile = ({ navigation }) => {
     const auth = getAuth();
     const user = auth.currentUser;
+    const [image, setImage] = useState(null);
     const [isPickerVisible, setPickerVisibility] = useState(false);
     const [currentPickerType, setCurrentPickerType] = useState('open');
     const [uploading,setUploading]= useState(false);
@@ -86,7 +88,6 @@ const RestProfile = ({ navigation }) => {
         pinCode: '',
     });
 
-    const [image, setImage] = useState(null);
 
     if (!user) {
         Alert.alert("Error", "You must be logged in to perform this action.");
@@ -102,52 +103,46 @@ const RestProfile = ({ navigation }) => {
     }, []);
 
     const pickImage = async () => {
-        try {
             let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: 'Images', // Use 'Images' instead of ['images']
+                mediaTypes: ImagePicker.MediaType.All, // Use 'Images' instead of ['images']
                 allowsEditing: true,
                 aspect: [4, 3],
                 quality: 1,
             });
-
-            console.log("Image Picker Result: ", result);
-
             if (!result.canceled) {
                 setImage(result.assets[0].uri); // Update the image state
-            } else {
-                console.log("Image picker canceled");
-            }
-        } catch (error) {
-            console.error("Error picking image: ", error);
-            Alert.alert("Error", "Failed to pick image. Please try again.");
-        }
+            } 
     };
 
     const uploadImage = async (uri) => {
         setUploading(true);
         try {
-            console.log("Fetching image from URI: ", uri);
-            const response = await fetch(uri);
-            const blob = await response.blob();
-            console.log("Blob created: ", blob);
-
-            const storageRef = ref(storage, `restaurant-images/${Date.now()}`);
-            console.log("Uploading image to Firebase Storage...");
-            await uploadBytes(storageRef, blob);
-            console.log("Image uploaded successfully.");
-
-            const downloadURL = await getDownloadURL(storageRef);
-            console.log("Download URL: ", downloadURL);
-            setUploading(false);
-            return downloadURL;
-        } catch (error) {
-            console.error("Error uploading image: ", error);
-            setUploading(false);
-            Alert.alert("Error", "Failed to upload image. Please try again.");
-            return null;
-        }
-    };
-
+            const { uri } = await FileSystem.getInfoAsync(image);
+            const blob = await new Promise ((resolve, reject) => {
+                const xhr = new XMLHttpRequest() ;
+                xhr.onload = () => {
+                    resolve(xhr.response);
+                };
+                xhr.onerror = function (e) {
+                    console.log(e);
+                    reject(new TypeError("Network request failed"));
+                  };
+                  xhr.responseType = "blob";
+                  xhr.open("GET", uri, true);
+                  xhr.send(null);
+                });
+              const filename = image.substring(image.lastIndexOf('/')+1);
+              const ref = FirebaseError.storage().ref().child(filename);
+              await ref.put(blob);
+              setUploading(false);
+              Alert.alert('Photo Uploaded!!!');
+              setImage(null);
+            }
+            catch(error){
+                console.error(error);
+                setUploading(false);
+            }
+            }
     const handleSubmit = async (values, { setSubmitting }) => {
         let imageUrl = '';
         if (image) {
@@ -258,25 +253,27 @@ const RestProfile = ({ navigation }) => {
                                     )}
                                 </View>
 
-                                {/* Image Picker and Add Button */}
+                                
+                                
                                 <View style={{ marginBottom: 15 }}>
                                     <StyledInputLabel>Restaurant Image</StyledInputLabel>
                                     <TouchableOpacity onPress={pickImage}>
                                         <View style={styles.imagePicker}>
-                                            {image ? (
+                                            {image &&  (
                                                 <Image source={{ uri: image }} style={styles.image} />
-                                            ) : (
-                                                <Text style={styles.imagePlaceholder}>Tap to select an image</Text>
                                             )}
                                         </View>
                                     </TouchableOpacity>
 
-                                    {/* Add Button */}
-                                    {image && (
+                                    <TouchableOpacity onPress={pickImage}>
+                                        <View>
+                                        {image && (
                                         <StyledButton onPress={handleSubmit} style={{ marginTop: 10 }}>
                                             <ButtonText>Add</ButtonText>
                                         </StyledButton>
-                                    )}
+                                         )}
+                                        </View>
+                                    </TouchableOpacity>
                                 </View>
 
 
