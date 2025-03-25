@@ -37,7 +37,7 @@ const RestList = () => {
     <StyledContainer>
       <PageTitle> Restaurants List</PageTitle>
       <Line />
-      <View style= {styles.container}>
+      <View style= {styles.Container}>
       <FlatList
         data={restaurants}
         keyExtractor={(item) => item.id}
