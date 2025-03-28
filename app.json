@@ -18,12 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.galaxies.firebase",
-      "googleServicesFile": "./google-services.json",
-      "permissions":[
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA"
-      ] 
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -50,7 +45,11 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+         "photosPermission": "custom photos permission",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to open the camera",
+
+          "//": "Disables the microphone permission",
+          "microphonePermission": false
         }
       ],
 

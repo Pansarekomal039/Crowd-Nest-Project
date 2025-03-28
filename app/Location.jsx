@@ -213,10 +213,12 @@ const RestaurantSearch = ({ navigation }) => {
         }
         renderItem={({ item }) => (
           <View style={styles.restaurantItem}>
+            <Image source={{ uri: item.image }} style={styles.restaurantImage} />
             <Text style={styles.restaurantName}>{item.name}</Text>
             <Text style={styles.restaurantDetails}>Cuisine: {item.cuisine}</Text>
             <Text style={styles.restaurantDetails}>Timing: {item.timing}</Text>
             <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
+            {/* <Text style={styles.restaurantDetails}>Image: {item.image}</Text> */}
             <TouchableOpacity
               style={styles.seeMoreButton}
               onPress={() => navigation.navigate("RestaurantDetails", { restaurants: item })}

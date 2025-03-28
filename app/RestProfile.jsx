@@ -1,13 +1,16 @@
 import React, { useState , useEffect} from 'react';
+import { Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
 import { collection, addDoc } from 'firebase/firestore'; 
 import { getAuth } from 'firebase/auth';
 import { Octicons } from '@expo/vector-icons';
+import { ScrollView } from 'react-native';
+
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import RNPickerSelect from 'react-native-picker-select';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system'
+// import * as ImagePicker from 'expo-image-picker';
+// import * as FileSystem from 'expo-file-system'
 import {
     StyledContainer,
     InnerContainer,
@@ -20,16 +23,26 @@ import {
     ButtonText,
     Line,
     PageTitle,
-    Image
 } from '../components/style';
+
 import { View, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Text } from 'react-native';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 import PropTypes from 'prop-types';
 import * as yup from 'yup';
-import { useNavigation } from 'expo-router';
+// import { useNavigation } from 'expo-router';
 import { firestore, storage } from '../app/firebaseConfig';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const { brand, darkLight, primary } = Colors;
+
+const cuisineImages = {
+    'Gujrati': require('../assets/images/Waiters-amico.png'),
+    'Maharashtrian': require('../assets/images/Waiters-amico.png'),
+    'Punjabi': require('../assets/images/Waiters-amico.png'),
+    'South Indian': require('../assets/images/Waiters-amico.png'),
+    'East Indian': require('../assets/images/Waiters-amico.png'),
+    'Chinese': require('../assets/images/Waiters-amico.png'),
+    'Rajasthani': require('../assets/images/Waiters-amico.png'),
+};
 
 const formatTime = (date) => {
     if (!date || !(date instanceof Date) || isNaN(date)) return '';
@@ -43,8 +56,9 @@ const formatTime = (date) => {
 const restProfileSchema = yup.object().shape({
     fullName: yup.string().required('Restaurant name is required'),
     cuisine: yup.string().required('Cuisine type is required'),
+        
     openTime: yup.date()
-        .required('Opening time is required')
+    .required('Opening time is required')
         .test(
             'is-before-close',
             'Opening time must be before closing time',
@@ -52,6 +66,7 @@ const restProfileSchema = yup.object().shape({
                 return !this.parent.closeTime || value < this.parent.closeTime;
             }
         ),
+        
     closeTime: yup.date()
         .required('Closing time is required')
         .test(
@@ -93,65 +108,67 @@ const RestProfile = ({ navigation }) => {
         Alert.alert("Error", "You must be logged in to perform this action.");
         return;
     }
-    useEffect(() => {
-        (async () => {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to upload images.');
-            }
-        })();
-    }, []);
+    // useEffect(() => {
+    //     (async () => {
+    //         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    //         if (status !== 'granted') {
+    //             Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to upload images.');
+    //         }
+    //     })();
+    // }, []);
 
-    const pickImage = async () => {
-            let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaType.All, // Use 'Images' instead of ['images']
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-            });
-            if (!result.canceled) {
-                setImage(result.assets[0].uri); // Update the image state
-            } 
-    };
+    // const pickImage = async () => {
+    //         let result = await ImagePicker.launchImageLibraryAsync({
+    //             mediaTypes: ImagePicker.MediaType.All, // Use 'Images' instead of ['images']
+    //             allowsEditing: true,
+    //             aspect: [4, 3],
+    //             quality: 1,
+    //         });
+    //         if (!result.canceled) {
+    //             setImage(result.assets[0].uri); // Update the image state
+    //         } 
+    // };
 
-    const uploadImage = async (uri) => {
-        setUploading(true);
-        try {
-            const { uri } = await FileSystem.getInfoAsync(image);
-            const blob = await new Promise ((resolve, reject) => {
-                const xhr = new XMLHttpRequest() ;
-                xhr.onload = () => {
-                    resolve(xhr.response);
-                };
-                xhr.onerror = function (e) {
-                    console.log(e);
-                    reject(new TypeError("Network request failed"));
-                  };
-                  xhr.responseType = "blob";
-                  xhr.open("GET", uri, true);
-                  xhr.send(null);
-                });
-              const filename = image.substring(image.lastIndexOf('/')+1);
-              const ref = FirebaseError.storage().ref().child(filename);
-              await ref.put(blob);
-              setUploading(false);
-              Alert.alert('Photo Uploaded!!!');
-              setImage(null);
-            }
-            catch(error){
-                console.error(error);
-                setUploading(false);
-            }
-            }
+    // const uploadImage = async (uri) => {
+    //     setUploading(true);
+    //     try {
+    //         const { uri } = await FileSystem.getInfoAsync(image);
+    //         const blob = await new Promise ((resolve, reject) => {
+    //             const xhr = new XMLHttpRequest() ;
+    //             xhr.onload = () => {
+    //                 resolve(xhr.response);
+    //             };
+    //             xhr.onerror = function (e) {
+    //                 console.log(e);
+    //                 reject(new TypeError("Network request failed"));
+    //               };
+    //               xhr.responseType = "blob";
+    //               xhr.open("GET", uri, true);
+    //               xhr.send(null);
+    //             });
+    //           const filename = image.substring(image.lastIndexOf('/')+1);
+    //           const ref = FirebaseError.storage().ref().child(filename);
+    //           await ref.put(blob);
+    //           setUploading(false);
+    //           Alert.alert('Photo Uploaded!!!');
+    //           setImage(null);
+    //         }
+    //         catch(error){
+    //             console.error(error);
+    //             setUploading(false);
+    //         }
+    //         }
+    // const handleSubmit = async (values, { setSubmitting }) => {
+    //     let imageUrl = '';
+    //     if (image) {
+    //         imageUrl = await uploadImage(image);
+    //         if (!imageUrl) {
+    //             setSubmitting(false);
+    //             return;
+    //         }
+    //     }
     const handleSubmit = async (values, { setSubmitting }) => {
-        let imageUrl = '';
-        if (image) {
-            imageUrl = await uploadImage(image);
-            if (!imageUrl) {
-                setSubmitting(false);
-                return;
-            }
-        }
+        const imageUrl = cuisineImages[values.cuisine] || '../assets/images/Waiters-amico.png';
 
         const newRestaurant = {
             id: Date.now().toString(),
@@ -255,26 +272,15 @@ const RestProfile = ({ navigation }) => {
 
                                 
                                 
-                                <View style={{ marginBottom: 15 }}>
+                                
+                                {/* <View style={{ marginBottom: 15, alignItems: 'center' }}>
                                     <StyledInputLabel>Restaurant Image</StyledInputLabel>
-                                    <TouchableOpacity onPress={pickImage}>
-                                        <View style={styles.imagePicker}>
-                                            {image &&  (
-                                                <Image source={{ uri: image }} style={styles.image} />
-                                            )}
-                                        </View>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity onPress={pickImage}>
-                                        <View>
-                                        {image && (
-                                        <StyledButton onPress={handleSubmit} style={{ marginTop: 10 }}>
-                                            <ButtonText>Add</ButtonText>
-                                        </StyledButton>
-                                         )}
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
+                                    {values.cuisine ? (
+                                       <Image source={cuisineImages[values.cuisine]} style={styles.image} />
+                                    ) : (
+                                        <Text style={styles.imagePlaceholder}>Select a cuisine to see the image</Text>
+                                    )}
+                                </View> */}
 
 
                                 {/* Time Pickers */}
