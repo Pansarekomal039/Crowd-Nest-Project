@@ -10,7 +10,7 @@ import {
   FlatList,
   SectionList,
   Image,
-  TouchableOpacity
+  TouchableOpacity  
 } from "react-native";
 import {
   Line,
