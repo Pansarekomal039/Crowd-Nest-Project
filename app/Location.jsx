@@ -26,6 +26,7 @@ import * as Location from "expo-location";
 import { DrawerItemList, DrawerContentScrollView } from "@react-navigation/drawer";
 import RestList from '../app/RestList'; 
 import O_Login from '../app/O_Login'; 
+import AboutScreen from "../app/About";
 const Tab = createBottomTabNavigator();
 
 // Drawer Navigator
@@ -178,11 +179,39 @@ const RestaurantSearch = ({ navigation }) => {
   const renderImageItem = ({ item }) => (
     <TouchableOpacity
       style={styles.imageItem}
-      onPress={() => navigation.navigate("Cuisine", { cuisine: item.cuisine,Auth ,firestore})}
+      onPress={() => navigation.navigate("Cuisine", { cuisine: item.cuisine, Auth, firestore })}
     >
       <Image source={item.image} style={styles.horizontalImage} resizeMode="cover" />
       <Text style={styles.cuisineText}>{item.cuisine}</Text>
     </TouchableOpacity>
+  );
+
+  const renderRestaurantItem = ({ item }) => (
+    <View style={styles.restaurantItem}>
+      {item.image && typeof item.image === 'string' ? (
+        <Image 
+          source={{ uri: item.image }} 
+          style={styles.restaurantImage} 
+          onError={() => console.log('Failed to load image')}
+          defaultSource={require("../assets/images/Waiters-amico.png")} 
+        />
+      )
+       : (
+        <View style={[styles.restaurantImage, {justifyContent: 'center', alignItems: 'center'}]}>
+          <Ionicons name="restaurant-outline" size={40} color="#000" />
+        </View>
+      )}
+      <Text style={styles.restaurantName}>{item.name}</Text>
+      <Text style={styles.restaurantDetails}>Cuisine: {item.cuisine}</Text>
+      <Text style={styles.restaurantDetails}>Timing: {item.timing}</Text>
+      <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
+      <TouchableOpacity
+        style={styles.seeMoreButton}
+        onPress={() => navigation.navigate("RestaurantDetails", { restaurantId: item.id })}
+      >
+        <Text style={styles.seeMoreButtonText}>See More</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -211,34 +240,12 @@ const RestaurantSearch = ({ navigation }) => {
             />
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.restaurantItem}>
-            <Image source={{ uri: item.image }} style={styles.restaurantImage} />
-            <Text style={styles.restaurantName}>{item.name}</Text>
-            <Text style={styles.restaurantDetails}>Cuisine: {item.cuisine}</Text>
-            <Text style={styles.restaurantDetails}>Timing: {item.timing}</Text>
-            <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
-            {/* <Text style={styles.restaurantDetails}>Image: {item.image}</Text> */}
-            <TouchableOpacity
-              style={styles.seeMoreButton}
-              onPress={() => navigation.navigate("RestaurantDetails", { restaurants: item })}
-            >
-              <Text style={styles.seeMoreButtonText}>See More</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        renderItem={renderRestaurantItem}
         renderSectionHeader={({ section: { title } }) => (
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{title}</Text>
-            <Image
-              source={require("../assets/images/1.jpg")} // Default image for section
-              style={styles.sectionImage}
-            />
           </View>
         )}
-        initialNumToRender={10}
-        windowSize={21}
-        maxToRenderPerBatch={10}
       />
     </View>
   );
@@ -353,11 +360,11 @@ const DrawerNav = () => {
 };
 
 // Additional Drawer Screens
-const AboutScreen = () => (
-  <View style={styles.screenContainer}>
-    <Text>About Screen</Text>
-  </View>
-);
+// const AboutScreen = () => (
+//   <View style={styles.screenContainer}>
+//     <Text>About Screen</Text>
+//   </View>
+// );
 
 const ContactScreen = () => (
   <View style={styles.screenContainer}>

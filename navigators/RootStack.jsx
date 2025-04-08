@@ -14,6 +14,7 @@ import RestList from "../app/RestList";
 import DrawerNav from "../app/Location";
 import RestaurantDetails from "../app/crowd";
 import Reserve from "../app/Reservation";
+import AboutScreen from "../app/About";
 const Stack = createStackNavigator();
  
 const RootStack = () => {
@@ -39,6 +40,7 @@ const RootStack = () => {
       <Stack.Screen name="RestList" component={RestList} />
       <Stack.Screen name="Reserve" component={Reserve} />
       <Stack.Screen name="RestaurantDetails" component={RestaurantDetails} />
+      <Stack.Screen name="AboutScreen" component={AboutScreen} />
     </Stack.Navigator>
   );
 };
