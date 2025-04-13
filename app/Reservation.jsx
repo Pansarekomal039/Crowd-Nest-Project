@@ -16,13 +16,16 @@ import {
     Line, 
     PageLogo,
 } from '../components/style';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
 
 const { brand, darkLight, primary } = Colors;
 
-const Reserve = ({ navigation }) => {
+const Reserve = () => {
+    const navigation = useNavigation();
+    const route = useRoute();
     const [date, setDate] = useState(new Date());
     const [time, setTime] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -92,7 +95,10 @@ const Reserve = ({ navigation }) => {
                                     [
                                         {
                                             text: "OK",
-                                            onPress: () => navigation.navigate('DrawerNav'), 
+                                            onPress: () => {
+                                                // Go back to RestD screen
+                                                navigation.goBack();
+                                              },
                                         },
                                     ]
                                 );
