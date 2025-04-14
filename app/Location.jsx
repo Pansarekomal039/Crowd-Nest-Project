@@ -27,6 +27,8 @@ import { DrawerItemList, DrawerContentScrollView } from "@react-navigation/drawe
 import RestList from '../app/RestList'; 
 import O_Login from '../app/O_Login'; 
 import AboutScreen from "../app/About";
+import ContactUsScreen from "../app/Contact";
+import ReservationScreen from "../app/restres";
 const Tab = createBottomTabNavigator();
 
 // Drawer Navigator
@@ -84,7 +86,7 @@ const RestaurantSearch = ({ navigation }) => {
 
   const Auth = getAuth();
   const user = Auth.currentUser;
-  const firestore = getFirestore();
+  const firestore = getFirestore(); // This returns the firestore object
 
   useEffect(() => {
     const getLocation = async () => {
@@ -102,7 +104,7 @@ const RestaurantSearch = ({ navigation }) => {
       });
       const reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
       if (reverseGeocode.length > 0) {
-        const { city, region, country,street, name, postalCode } = reverseGeocode[0];
+        const { city, region, country, street, name, postalCode } = reverseGeocode[0];
         const detailedAddress = `${street || name}, ${city}, ${region}, ${postalCode}, ${country}`;
         setAddress(detailedAddress)
       }
@@ -114,18 +116,24 @@ const RestaurantSearch = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    const q = query(collection(firestore, 'restaurants'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const restaurantList = [];
-      querySnapshot.forEach((doc) => {
-        restaurantList.push({ id: doc.id, ...doc.data() });
-      });
-      setRestaurants(restaurantList);
-    });
+    const unsubscribe = onSnapshot(
+      collection(firestore, "restaurants"),
+      (querySnapshot) => {
+        const restaurantList = [];
+        querySnapshot.forEach((doc) => {
+          console.log("Document ID:", doc.id); // Should show iVV76l3g3oByQSWTELg1
+          console.log("Custom ID field:", doc.data().id); // Should show 1742615131701
+          restaurantList.push({ 
+            id: doc.id, // Using Firestore document ID
+            ...doc.data() 
+          });
+        });
+        setRestaurants(restaurantList);
+      }
+    );
     return () => unsubscribe();
-  }, [user]);
-
+  }, []);
+  
   if (loading) {
     return (
       <View style={styles.container}>
@@ -195,8 +203,7 @@ const RestaurantSearch = ({ navigation }) => {
           onError={() => console.log('Failed to load image')}
           defaultSource={require("../assets/images/Waiters-amico.png")} 
         />
-      )
-       : (
+      ) : (
         <View style={[styles.restaurantImage, {justifyContent: 'center', alignItems: 'center'}]}>
           <Ionicons name="restaurant-outline" size={40} color="#000" />
         </View>
@@ -207,7 +214,9 @@ const RestaurantSearch = ({ navigation }) => {
       <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
       <TouchableOpacity
         style={styles.seeMoreButton}
-        onPress={() => navigation.navigate("RestaurantDetails", { restaurantId: item.id })}
+        onPress={() => navigation.navigate("RestD", { 
+          restaurantId: item.id // Using Firestore document ID
+        })}
       >
         <Text style={styles.seeMoreButtonText}>See More</Text>
       </TouchableOpacity>
@@ -322,7 +331,7 @@ const BottomTabNavigator = () => {
        component={RestaurantSearch} 
       options={{headerShown: false}}/>
       <Tab.Screen name="Reservations"
-       component={HomeScreen} 
+       component={ReservationScreen} 
        options={{headerShown: false}}/>
       <Tab.Screen name="Notifications" 
       component={ProfileScreen}
@@ -354,7 +363,7 @@ const DrawerNav = () => {
 >        
         <Drawer.Screen name="Crowd-nest" component={BottomTabNavigator} />
         <Drawer.Screen name="About" component={AboutScreen} />
-        <Drawer.Screen name="Contact" component={ContactScreen} />
+        <Drawer.Screen name="Contact" component={ContactUsScreen} />
       </Drawer.Navigator>
   );
 };
@@ -416,6 +425,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  restaurantImage: {
+    borderRadius: 5,
+    marginBottom: 10,
   },
   restaurantName: {
     fontSize: 16,

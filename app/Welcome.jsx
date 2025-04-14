@@ -29,7 +29,7 @@ const Welcome = () => {
         <Entypo name="feather" size={25} /></SubTitle>
         
 
-        <StyledButton onPress={() => navigation.navigate('DrawerNav')}>
+        <StyledButton onPress={() => navigation.navigate('Login')}>
           <ButtonText1>Get Started</ButtonText1>
         
         </StyledButton> 

@@ -6,7 +6,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Octicons } from '@expo/vector-icons';
 import { ScrollView } from 'react-native';
-
+import * as Location from 'expo-location';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import RNPickerSelect from 'react-native-picker-select';
 // import * as ImagePicker from 'expo-image-picker';
@@ -108,86 +108,70 @@ const RestProfile = ({ navigation }) => {
         Alert.alert("Error", "You must be logged in to perform this action.");
         return;
     }
-    // useEffect(() => {
-    //     (async () => {
-    //         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    //         if (status !== 'granted') {
-    //             Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to upload images.');
-    //         }
-    //     })();
-    // }, []);
-
-    // const pickImage = async () => {
-    //         let result = await ImagePicker.launchImageLibraryAsync({
-    //             mediaTypes: ImagePicker.MediaType.All, // Use 'Images' instead of ['images']
-    //             allowsEditing: true,
-    //             aspect: [4, 3],
-    //             quality: 1,
-    //         });
-    //         if (!result.canceled) {
-    //             setImage(result.assets[0].uri); // Update the image state
-    //         } 
-    // };
-
-    // const uploadImage = async (uri) => {
-    //     setUploading(true);
-    //     try {
-    //         const { uri } = await FileSystem.getInfoAsync(image);
-    //         const blob = await new Promise ((resolve, reject) => {
-    //             const xhr = new XMLHttpRequest() ;
-    //             xhr.onload = () => {
-    //                 resolve(xhr.response);
-    //             };
-    //             xhr.onerror = function (e) {
-    //                 console.log(e);
-    //                 reject(new TypeError("Network request failed"));
-    //               };
-    //               xhr.responseType = "blob";
-    //               xhr.open("GET", uri, true);
-    //               xhr.send(null);
-    //             });
-    //           const filename = image.substring(image.lastIndexOf('/')+1);
-    //           const ref = FirebaseError.storage().ref().child(filename);
-    //           await ref.put(blob);
-    //           setUploading(false);
-    //           Alert.alert('Photo Uploaded!!!');
-    //           setImage(null);
-    //         }
-    //         catch(error){
-    //             console.error(error);
-    //             setUploading(false);
-    //         }
-    //         }
-    // const handleSubmit = async (values, { setSubmitting }) => {
-    //     let imageUrl = '';
-    //     if (image) {
-    //         imageUrl = await uploadImage(image);
-    //         if (!imageUrl) {
-    //             setSubmitting(false);
-    //             return;
-    //         }
-    //     }
+    const getCoordinates = async (addressString) => {
+        try{
+            let geocode = await Location.geocodeAsync(addressString);
+            if(geocode.length > 0) {
+                const {latitude, longitude } = geocode[0];
+                return{ latitude, longitude};
+            }
+        }
+            catch (err) {
+                console.error("Geocoding error:", err);                
+            }
+            return null;        
+    };
     const handleSubmit = async (values, { setSubmitting }) => {
-        const imageUrl = cuisineImages[values.cuisine] || '../assets/images/Waiters-amico.png';
-
-        const newRestaurant = {
-            id: Date.now().toString(),
-            name: values.fullName,
-            cuisine: values.cuisine,
-            capacity: values.no_of_guest,
-            timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
-            address: `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`,
-            ownerId: user.uid,
-            image: imageUrl,
-        };
-
         try {
-            await addDoc(collection(firestore, 'restaurants'), newRestaurant);
+            const fullAddress = `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`;
+            
+            // Get coordinates
+            const coordinates = await getCoordinates(fullAddress);
+            if (!coordinates) {
+                Alert.alert("Error", "Could not get location coordinates");
+                setSubmitting(false);
+                return;
+            }
+    
+            // Create restaurant data
+            const newRestaurant = {
+                name: values.fullName,
+                cuisine: values.cuisine,
+                capacity: values.no_of_guest,
+                timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
+                address: fullAddress,
+                ownerId: user.uid,
+                image: null, // We'll handle this below
+                location: new firebase.firestore.GeoPoint(
+                    coordinates.latitude,
+                    coordinates.longitude
+                ),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+    
+            // Add to Firestore
+            const docRef = await addDoc(collection(firestore, 'restaurants'), newRestaurant);
+            console.log("Created restaurant with ID:", docRef.id);
+    
+            Alert.alert("Success", "Restaurant created successfully!");
+            navigation.goBack();
+        } catch (error) {
+            console.error("Error creating restaurant:", error);
+            Alert.alert("Error", "Failed to create restaurant");
+        } finally {
             setSubmitting(false);
-
+        }
+    
+    
+        try {
+            // Add document only once
+            const docRef = await addDoc(collection(firestore, 'restaurants'), newRestaurant);
+            console.log("Restaurant created with ID:", docRef.id);
+    
+            setSubmitting(false);
             Alert.alert(
-                "Reservation Confirmed",
-                `Hi ${values.fullName}, Your reservation for ${values.no_of_guest} guests is confirmed!`,
+                "Success",
+                `Restaurant ${values.fullName} created successfully!`,
                 [{
                     text: "OK",
                     onPress: () => navigation.goBack()
@@ -198,6 +182,53 @@ const RestProfile = ({ navigation }) => {
             Alert.alert("Error", "Failed to add restaurant. Please try again.");
         }
     };
+    // const handleSubmit = async (values, { setSubmitting }) => {
+    //     const imageUrl = cuisineImages[values.cuisine] || '../assets/images/Waiters-amico.png';
+    //     fullAddress =  `${values.street}, ${values.city}, ${values.states} ${values.pinCode}`;
+
+    //     const coordinates = await getCoordinates(fullAddress);
+
+    //     if(!coordinates){
+    //         Alert.alert("Error", "Unable to fetch location co-ordinates");
+    //         setSubmitting(false);
+    //         return;
+    //     }
+        
+    //     const newRestaurant = {
+    //         // id: Date.now().toString(),
+    //         name: values.fullName,
+    //         cuisine: values.cuisine,
+    //         capacity: values.no_of_guest,
+    //         timing: `${formatTime(values.openTime)} - ${formatTime(values.closeTime)}`,
+    //         address: fullAddress,
+    //         ownerId: user.uid,
+    //         image: imageUrl,
+    //         location:{
+    //             latitude: coordinates.latitude,
+    //             longitude:coordinates.longitude
+    //         }
+    //     };
+
+    //     try {
+    //         const docRef = await addDoc(collection(firestore, 'restaurants'), newRestaurant);
+    //         console.log("New restaurant ID:", docRef.id);
+            
+    //         await addDoc(collection(firestore, 'restaurants'), newRestaurant);
+    //         setSubmitting(false);
+
+    //         Alert.alert(
+    //             "Reservation Confirmed",
+    //             `Hi ${values.fullName}, Your reservation for ${values.no_of_guest} guests is confirmed!`,
+    //             [{
+    //                 text: "OK",
+    //                 onPress: () => navigation.goBack()
+    //             }]
+    //         );
+    //     } catch (error) {
+    //         console.error("Error adding restaurant: ", error);
+    //         Alert.alert("Error", "Failed to add restaurant. Please try again.");
+    //     }
+    // };
 
     const handleAddressChange = (field, value) => {
         setAddress(prevState => ({ ...prevState, [field]: value }));
@@ -463,37 +494,3 @@ RestProfile.propTypes = {
 };
 
 export default RestProfile;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// rules_version = '2';
-
-// service cloud.firestore {
-//   match /databases/{database}/documents {
-
-//     // This rule allows anyone with your Firestore database reference to view, edit,
-//     // and delete all data in your Firestore database. It is useful for getting
-//     // started, but it is configured to expire after 30 days because it
-//     // leaves your app open to attackers. At that time, all client
-//     // requests to your Firestore database will be denied.
-//     //
-//     // Make sure to write security rules for your app before that time, or else
-//     // all client requests to your Firestore database will be denied until you Update
-//     // your rules
-//     match /{document=**} {
-//       allow read, write: if request.time < timestamp.date(2025, 2, 21);
-//     }
-//   }
-// }

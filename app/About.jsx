@@ -110,7 +110,7 @@ const AboutScreen = ({ navigation }) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>© 2023 CrowdNest</Text>
+        <Text style={styles.footerText}>© 2025 CrowdNest</Text>
         <Text style={styles.footerText}>Version 1.0.0</Text>
       </View>
     </ScrollView>
