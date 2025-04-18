@@ -302,7 +302,6 @@ const Cuisine = ({ route, navigation }) => {
   );
 };
 
-// Bottom Tab Navigator with 4 screens
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
