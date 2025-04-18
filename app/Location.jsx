@@ -296,9 +296,10 @@ const Cuisine = ({ route, navigation }) => {
             <Text style={styles.restaurantDetails}>Address: {item.address}</Text>
           </View>
         
-        )}
+        )} 
       />
     </View>
+    
   );
 };
 
