@@ -40,9 +40,13 @@
     "expo-camera": "~16.0.16",
     "expo-constants": "~17.0.5",
     "expo-dev-client": "~5.0.12",
+    "expo-file-system": "~18.0.11",
+    "expo-firebase-app": "^2.0.0",
+    "expo-firebase-messaging": "^2.0.0",
     "expo-font": "~13.0.2",
     "expo-haptics": "~14.0.0",
     "expo-image-picker": "~16.0.6",
+    "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.5",
     "expo-location": "~18.0.10",
     "expo-router": "^4.0.17",
@@ -79,9 +83,7 @@
     "rimraf": "^6.0.1",
     "semver": "^7.6.3",
     "styled-components": "^6.1.14",
-    "yup": "^1.6.1",
-    "expo-file-system": "~18.0.11",
-    "expo-linear-gradient": "~14.0.2"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
