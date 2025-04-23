@@ -12,7 +12,7 @@ async function requestUserPermission(){
   if(enabled) {
     console.log('Authorization status:',authStatus);
   }
-}
+} 
 
 const getToken = async() => {
   const token = await messaging().getToken()
