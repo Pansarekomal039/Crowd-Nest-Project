@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"; 
 import RootStack from "../navigators/RootStack";
 import messaging from '@react-native-firebase/messaging';
 
